@@ -1,6 +1,7 @@
 // src/app.ts
 import express, { Request, Response } from 'express'
-import { signUp } from './controllers/userController'
+import { login, signUp } from './controllers/userController'
+import { addTask } from './controllers/taskController'
 
 const app = express()
 const port = 8080
@@ -15,4 +16,9 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`)
 })
 
+// signup and login
 app.post('/signup', signUp)
+app.post('/login', login)
+
+// tasks
+app.post('/task', addTask)

@@ -1,7 +1,7 @@
 // signupController.ts
 import { Request, Response } from 'express'
 import { RowDataPacket } from 'mysql2/promise'
-import { type User } from '../types/user'
+import { type User } from '../types/types'
 import { pool } from '../pool'
 import { genSalt, hash } from 'bcrypt'
 
