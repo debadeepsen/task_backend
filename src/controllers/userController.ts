@@ -1,9 +1,9 @@
 // signupController.ts
 import { Request, Response } from 'express'
 import { RowDataPacket } from 'mysql2/promise'
-import { type User } from '../types/types'
 import { pool } from '../pool'
-import { genSalt, hash } from 'bcrypt'
+import { genSalt } from 'bcrypt'
+import md5 from 'md5'
 
 export const signUp = async (req: Request, res: Response) => {
   const { email, password } = req.body
@@ -23,7 +23,7 @@ export const signUp = async (req: Request, res: Response) => {
     }
 
     const salt = await genSalt(10)
-    const hashedPassword = await hash(password, salt)
+    const hashedPassword = md5(password + salt)
 
     const result = await pool.query(
       'INSERT INTO users (email, hashed_password, salt) VALUES (?, ?, ?)',
@@ -48,15 +48,24 @@ export const login = async (req: Request, res: Response) => {
 
   try {
     const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM users WHERE email = ? AND password = ?',
-      [email, password]
+      'SELECT * FROM users WHERE email = ?',
+      [email]
     )
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' })
     }
 
-    // Authentication successful
+    const user = rows[0]
+    const hashedPassword = user.hashed_password
+    const salt = user.salt
+
+    const passwordMatch = md5(password + salt) === hashedPassword
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid email or password' })
+    }
+
     res.status(200).json({ message: 'Login successful' })
   } catch (error) {
     console.error('Error during login:', error)
