@@ -2,11 +2,13 @@
 import express, { Request, Response } from 'express'
 import { login, signUp } from './controllers/userController'
 import { addTask, deleteTask, editTask, getTasks } from './controllers/taskController'
+import cors from 'cors'
 
 const app = express()
 const port = 8080
 
 app.use(express.json())
+app.use(cors())
 
 app.get('/', (_req: Request, res: Response) => {
   res.status(200).json({ message: `Server is running on port ${port}` })
