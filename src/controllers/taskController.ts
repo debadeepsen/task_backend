@@ -3,10 +3,11 @@ import { pool } from '../pool'
 import { Task } from '../types/types'
 import { RowDataPacket } from 'mysql2'
 
-export const getTasks = async (_req: Request, res: Response) => {
+export const getTasks = async (req: Request, res: Response) => {
   try {
     const [tasks] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM tasks WHERE deleted = 0'
+      'SELECT * FROM tasks WHERE deleted = 0 AND email = ?',
+      [req.params?.email]
     )
 
     res.status(200).json(tasks)
@@ -17,7 +18,7 @@ export const getTasks = async (_req: Request, res: Response) => {
 }
 
 export const addTask = async (req: Request, res: Response) => {
-  const { title, description, completed } = req.body
+  const { email, title, description, completed } = req.body
 
   if (!title) {
     return res.status(400).json({ error: 'Title is required' })
@@ -25,8 +26,8 @@ export const addTask = async (req: Request, res: Response) => {
 
   try {
     const [result] = await pool.query<RowDataPacket[]>(
-      'INSERT INTO tasks (title, description, completed) VALUES (?, ?, ?)',
-      [title, description, completed || false]
+      'INSERT INTO tasks (email, title, description, completed) VALUES (?, ?, ?, ?)',
+      [email, title, description, completed || false]
     )
 
     const taskId = Array.isArray(result) ? result[0].insertId : undefined
