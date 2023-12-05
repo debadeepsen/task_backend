@@ -1,14 +1,12 @@
 import express, { Request, Response } from 'express'
 import { pool } from '../pool'
-import { Task } from '../types/types'
 import { RowDataPacket } from 'mysql2'
 
 export const getTasks = async (req: Request, res: Response) => {
-  console.log(req)
   try {
     const [tasks] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM tasks WHERE deleted = 0 AND email = ?',
-      [req.params?.email]
+      [req.query?.email]
     )
 
     res.status(200).json(tasks)
@@ -26,12 +24,18 @@ export const addTask = async (req: Request, res: Response) => {
   }
 
   try {
-    const [result] = await pool.query<RowDataPacket[]>(
+    const [result] = await pool.query(
       'INSERT INTO tasks (email, title, completed) VALUES (?, ?, ?)',
       [email, title, false]
     )
 
-    const taskId = Array.isArray(result) ? result[0].insertId : undefined
+    const insertResult = result as {
+      insertId: number
+    }
+
+    console.log(result)
+
+    const taskId = insertResult.insertId
 
     if (taskId !== undefined) {
       res.status(201).json({ id: taskId, message: 'Task added successfully' })
